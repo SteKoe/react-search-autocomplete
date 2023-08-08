@@ -1,17 +1,11 @@
 import { default as Fuse } from 'fuse.js'
-import React, {
-  ChangeEvent,
-  FocusEvent,
-  FocusEventHandler,
-  KeyboardEvent,
-  useEffect,
-  useState
-} from 'react'
+import React, { ChangeEvent, FocusEvent, FocusEventHandler, KeyboardEvent, useEffect, useState } from 'react'
 import styled, { ThemeProvider } from 'styled-components'
-import { DefaultTheme, defaultFuseOptions, defaultTheme } from '../config/config'
+import { defaultFuseOptions, DefaultTheme, defaultTheme } from '../config/config'
 import { debounce } from '../utils/utils'
 import Results, { Item } from './Results'
 import SearchInput from './SearchInput'
+import FuseResult = Fuse.FuseResult
 
 export const DEFAULT_INPUT_DEBOUNCE = 200
 export const MAX_RESULTS = 10
@@ -33,6 +27,7 @@ export interface ReactSearchAutocompleteProps<T> {
   styling?: DefaultTheme
   resultStringKeyName?: string
   inputSearchString?: string
+  updateResultsOnInputChange?: boolean
   formatResult?: Function
   showNoResults?: boolean
   showNoResultsText?: string
@@ -42,29 +37,35 @@ export interface ReactSearchAutocompleteProps<T> {
 }
 
 export default function ReactSearchAutocomplete<T>({
-  items = [],
-  fuseOptions = defaultFuseOptions,
-  inputDebounce = DEFAULT_INPUT_DEBOUNCE,
-  onSearch = () => {},
-  onHover = () => {},
-  onSelect = () => {},
-  onFocus = () => {},
-  onClear = () => {},
-  showIcon = true,
-  showClear = true,
-  maxResults = MAX_RESULTS,
-  placeholder = '',
-  autoFocus = false,
-  styling = {},
-  resultStringKeyName = 'name',
-  inputSearchString = '',
-  formatResult,
-  showNoResults = true,
-  showNoResultsText = 'No results',
-  showItemsOnFocus = false,
-  maxLength = 0,
-  className
-}: ReactSearchAutocompleteProps<T>) {
+                                                     items = [],
+                                                     fuseOptions = defaultFuseOptions,
+                                                     inputDebounce = DEFAULT_INPUT_DEBOUNCE,
+                                                     onSearch = () => {
+                                                     },
+                                                     onHover = () => {
+                                                     },
+                                                     onSelect = () => {
+                                                     },
+                                                     onFocus = () => {
+                                                     },
+                                                     onClear = () => {
+                                                     },
+                                                     showIcon = true,
+                                                     showClear = true,
+                                                     maxResults = MAX_RESULTS,
+                                                     placeholder = '',
+                                                     autoFocus = false,
+                                                     styling = {},
+                                                     resultStringKeyName = 'name',
+                                                     updateResultsOnInputChange = true,
+                                                     inputSearchString = '',
+                                                     formatResult,
+                                                     showNoResults = true,
+                                                     showNoResultsText = 'No results',
+                                                     showItemsOnFocus = false,
+                                                     maxLength = 0,
+                                                     className
+                                                   }: ReactSearchAutocompleteProps<T>) {
   const theme = { ...defaultTheme, ...styling }
   const options = { ...defaultFuseOptions, ...fuseOptions }
 
@@ -81,16 +82,18 @@ export default function ReactSearchAutocomplete<T>({
 
   useEffect(() => {
     setSearchString(inputSearchString)
-    const timeoutId = setTimeout(() => setResults(fuseResults(inputSearchString)), 0)
 
-    return () => clearTimeout(timeoutId)
+    if (updateResultsOnInputChange) {
+      const timeoutId = setTimeout(() => setResults(fuseResults(inputSearchString)), 0)
+      return () => clearTimeout(timeoutId)
+    }
   }, [inputSearchString])
 
   useEffect(() => {
     searchString?.length > 0 &&
-      results &&
-      results?.length > 0 &&
-      setResults(fuseResults(searchString))
+    results &&
+    results?.length > 0 &&
+    setResults(fuseResults(searchString))
   }, [items])
 
   useEffect(() => {
@@ -156,7 +159,7 @@ export default function ReactSearchAutocomplete<T>({
   const fuseResults = (keyword: string) =>
     fuse
       .search(keyword, { limit: maxResults })
-      .map((result) => ({ ...result.item }))
+      .map((result: FuseResult<any>) => ({ ...result.item }))
       .slice(0, maxResults)
 
   const handleSetSearchString = ({ target }: ChangeEvent<HTMLInputElement>) => {
@@ -177,9 +180,9 @@ export default function ReactSearchAutocomplete<T>({
   }
 
   const handleSetHighlightedItem = ({
-    index,
-    event
-  }: {
+                                      index,
+                                      event
+                                    }: {
     index?: number
     event?: KeyboardEvent<HTMLInputElement>
   }) => {
@@ -226,7 +229,7 @@ export default function ReactSearchAutocomplete<T>({
   return (
     <ThemeProvider theme={theme}>
       <StyledReactSearchAutocomplete className={className}>
-        <div className="wrapper">
+        <div className='wrapper'>
           <SearchInput
             searchString={searchString}
             setSearchString={handleSetSearchString}
@@ -284,9 +287,11 @@ const StyledReactSearchAutocomplete = styled.div`
     &:hover {
       box-shadow: ${(props: any) => props.theme.boxShadow};
     }
+
     &:active {
       box-shadow: ${(props: any) => props.theme.boxShadow};
     }
+
     &:focus-within {
       box-shadow: ${(props: any) => props.theme.boxShadow};
     }
