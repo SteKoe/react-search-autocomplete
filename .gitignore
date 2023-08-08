@@ -1,5 +1,6 @@
+!/dist
+
 /node_modules
-/dist
 /build
 .eslintcache
 .DS_Store
